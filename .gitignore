@@ -1,0 +1,29 @@
+# C++ Build Artifacts
+backend/build/
+backend/bin/
+*.exe
+*.o
+*.obj
+*.out
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Node / Frontend Dependencies & Build Output
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# System & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
