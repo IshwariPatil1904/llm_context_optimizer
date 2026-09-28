@@ -66,21 +66,53 @@ export const BenchmarkPage: React.FC<BenchmarkPageProps> = ({
 
   const handleExportCsv = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8080/api/benchmark/csv');
-      if (res.ok) {
-        const csvText = await res.text();
-        const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `benchmark.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        setDownloaded(true);
-        setTimeout(() => setDownloaded(false), 2000);
+      let csvContent = '';
+      try {
+        const res = await fetch('http://127.0.0.1:8080/api/benchmark/csv');
+        if (res.ok) {
+          csvContent = await res.text();
+        }
+      } catch (err) {
+        console.warn('Backend CSV endpoint unavailable, using frontend CSV generator fallback.', err);
       }
+
+      // Fallback CSV generation if backend response is empty
+      if (!csvContent && benchmarkRecords.length > 0) {
+        const headers = ['DatasetSize', 'Algorithm', 'ExecutionTimeMs', 'SelectedChunksCount', 'TotalTokens', 'TotalRelevance', 'AverageSimilarity', 'TopicCoverage', 'TokenBudget', 'Timestamp'];
+        const rows = benchmarkRecords.map(r => [
+          r.datasetSize,
+          `"${r.algorithmName.replace(/"/g, '""')}"`,
+          r.executionTimeMs.toFixed(4),
+          r.selectedChunksCount,
+          r.totalTokens,
+          r.totalRelevance.toFixed(2),
+          r.averageSimilarity.toFixed(4),
+          r.topicCoverage.toFixed(2),
+          r.tokenBudget,
+          `"${r.timestamp || new Date().toISOString()}"`
+        ].join(','));
+        csvContent = [headers.join(','), ...rows].join('\n');
+      }
+
+      if (!csvContent) {
+        alert('No benchmark records available to export. Run a benchmark first.');
+        return;
+      }
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `benchmark_results_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setDownloaded(true);
+      setTimeout(() => setDownloaded(false), 2000);
     } catch (err) {
-      console.error('CSV Export failed', err);
+      console.error('CSV Export failed:', err);
+      alert('CSV export failed. Please check browser console.');
     }
   };
 

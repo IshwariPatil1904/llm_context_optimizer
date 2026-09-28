@@ -69,9 +69,22 @@ export const WorkspacePage: React.FC<WorkspacePageProps> = ({
 
   const handleCopy = () => {
     if (!lastResult?.optimizedContext) return;
-    navigator.clipboard.writeText(lastResult.optimizedContext);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(lastResult.optimizedContext);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = lastResult.optimizedContext;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.warn('Clipboard copy failed', err);
+    }
   };
 
   const selectedChunks = allChunks.filter(c => lastResult?.selectedChunkIds?.includes(c.id));

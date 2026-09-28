@@ -35,9 +35,22 @@ export const SelectedContextPage: React.FC<SelectedContextPageProps> = ({
 
   const handleCopy = () => {
     if (!activeResult?.optimizedContext) return;
-    navigator.clipboard.writeText(activeResult.optimizedContext);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(activeResult.optimizedContext);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = activeResult.optimizedContext;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.warn('Clipboard copy failed', err);
+    }
   };
 
   const handleDownloadTxt = () => {

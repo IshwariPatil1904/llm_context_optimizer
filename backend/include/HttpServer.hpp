@@ -354,7 +354,14 @@ private:
         else if (path == "/api/benchmark/csv" && method == "GET") {
             std::ifstream file("results/benchmark.csv");
             if (!file.is_open()) {
-                sendResponse(clientSocket, 404, "text/plain", "CSV file not found");
+                // Auto-generate benchmark records if file does not exist yet
+                Benchmark bench;
+                std::vector<int> sizes = {10, 25, 50, 100, 250, 500};
+                bench.runScalingBenchmark("database normalization indexing transaction join optimization", 350, sizes, "results/benchmark.csv");
+                file.open("results/benchmark.csv");
+            }
+            if (!file.is_open()) {
+                sendResponse(clientSocket, 500, "text/plain", "Failed to generate CSV file");
                 return;
             }
             std::ostringstream ss;

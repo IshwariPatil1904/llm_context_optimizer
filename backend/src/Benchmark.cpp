@@ -223,7 +223,19 @@ std::vector<BenchmarkRunRecord> Benchmark::runScalingBenchmark(const std::string
     return allRecords;
 }
 
+#ifdef _WIN32
+#include <direct.h>
+#else
+#include <sys/stat.h>
+#endif
+
 void Benchmark::exportToCsv(const std::vector<BenchmarkRunRecord>& records, const std::string& csvPath) {
+#ifdef _WIN32
+    _mkdir("results");
+#else
+    mkdir("results", 0755);
+#endif
+
     std::ofstream file(csvPath, std::ios::out | std::ios::trunc);
     if (!file.is_open()) {
         std::cerr << "[Benchmark] Failed to open CSV output path: " << csvPath << "\n";
